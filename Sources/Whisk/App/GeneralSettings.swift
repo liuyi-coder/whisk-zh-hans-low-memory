@@ -58,6 +58,12 @@ enum CardSize: String, CaseIterable, Identifiable {
     }
 }
 
+/// Whether a successful copy plays the selected confirmation sound.
+struct CopySoundSettings {
+    var isEnabled: Bool
+    var option: CopySoundOption
+}
+
 /// An application whose copies are never recorded.
 struct ExcludedApp: Codable, Equatable, Identifiable {
     let bundleID: String
@@ -102,6 +108,17 @@ final class GeneralSettingsStore: ObservableObject {
         didSet { defaults.set(cardSize.rawValue, forKey: "cardSize") }
     }
 
+    @Published var copySound: CopySoundSettings {
+        didSet {
+            defaults.set(copySound.isEnabled, forKey: "copySoundEnabled")
+            defaults.set(copySound.option.rawValue, forKey: "copySoundOption")
+        }
+    }
+
+    @Published var language: AppLanguage {
+        didSet { defaults.set(language.rawValue, forKey: AppLanguage.defaultsKey) }
+    }
+
     @Published var excludedApps: [ExcludedApp] {
         didSet {
             do {
@@ -126,6 +143,14 @@ final class GeneralSettingsStore: ObservableObject {
         vimNavigation = defaults.bool(forKey: "vimNavigation")
         linkPreviews = defaults.object(forKey: "linkPreviews") == nil ? true : defaults.bool(forKey: "linkPreviews")
         cardSize = CardSize(rawValue: defaults.string(forKey: "cardSize") ?? "") ?? .medium
+        let copySoundOption =
+            CopySoundOption(rawValue: defaults.string(forKey: "copySoundOption") ?? "") ?? .tick
+        copySound = CopySoundSettings(
+            isEnabled: defaults.object(forKey: "copySoundEnabled") == nil
+                ? true
+                : defaults.bool(forKey: "copySoundEnabled"),
+            option: copySoundOption)
+        language = AppLanguage.stored(in: defaults)
         excludedApps = []
         if let data = defaults.data(forKey: "excludedApps") {
             do {

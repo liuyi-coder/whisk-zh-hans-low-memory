@@ -420,7 +420,7 @@ final class HistoryPresenter {
         if let cached = timeCache[item.id], cached.bucket == bucket {
             return cached.label
         }
-        let label = Self.relativeFormatter.localizedString(for: item.copiedAt, relativeTo: now)
+        let label = Self.relativeTimeLabel(for: item.copiedAt, relativeTo: now, language: .stored())
         if timeCache.count >= cacheLimit {
             timeCache = timeCache.filter { presentedIDs.contains($0.key) }
         }
@@ -432,9 +432,36 @@ final class HistoryPresenter {
         localized("\(count) items")
     }
 
-    private static let relativeFormatter: RelativeDateTimeFormatter = {
+    static func relativeTimeLabel(for date: Date, relativeTo now: Date, language: AppLanguage) -> String {
+        let age = max(0, Int(now.timeIntervalSince(date)))
+        guard language.usesSimplifiedChinese else {
+            return relativeFormatter(for: language).localizedString(for: date, relativeTo: now)
+        }
+        if age < 3_600 {
+            return localized("\(age / 60) minutes ago")
+        }
+        if age < 86_400 {
+            return localized("\(age / 3_600) hours ago")
+        }
+        return localized("\(age / 86_400) days ago")
+    }
+
+    private static func relativeFormatter(for language: AppLanguage) -> RelativeDateTimeFormatter {
+        switch language {
+        case .english: englishRelativeFormatter
+        case .french: frenchRelativeFormatter
+        case .system, .simplifiedChinese: systemRelativeFormatter
+        }
+    }
+
+    private static func makeRelativeFormatter(locale: Locale? = nil) -> RelativeDateTimeFormatter {
         let formatter = RelativeDateTimeFormatter()
         formatter.unitsStyle = .abbreviated
+        formatter.locale = locale
         return formatter
-    }()
+    }
+
+    private static let systemRelativeFormatter = makeRelativeFormatter()
+    private static let englishRelativeFormatter = makeRelativeFormatter(locale: Locale(identifier: "en"))
+    private static let frenchRelativeFormatter = makeRelativeFormatter(locale: Locale(identifier: "fr"))
 }

@@ -282,7 +282,7 @@ enum ViewFixtures {
         let hosting = try #require(window.contentView)
         pump(hosting)
 
-        #expect(store.state.accessPrompt?.buttonTitle == "Allow Clipboard Access")
+        #expect(store.state.accessPrompt?.buttonTitle == localized("Allow Clipboard Access"))
         #expect(store.state.emptyMessage == nil)
         #expect(hosting.frame.width == 1200)
     }

@@ -6,6 +6,7 @@
 #   CODESIGN_IDENTITY     signing identity; unset or "-" signs ad hoc
 #   APP_STORE=1           the Mac App Store build: App Sandbox entitlements
 #                         and the APP_STORE flag (no updater of its own)
+#   WHISK_LOCALIZED=1      localized build without the upstream updater
 #   PROVISIONING_PROFILE  Mac App Store profile to embed; adds the team
 #                         entitlements the store requires (APP_STORE only)
 #   BUILD_NUMBER          CFBundleVersion; defaults to the version
@@ -15,10 +16,18 @@ VERSION="${1:-0.0.0}"
 ARCH="${2:-native}"
 BUNDLE_ID="com.nathanponcet.whisk"
 APP_STORE="${APP_STORE:-0}"
+WHISK_LOCALIZED="${WHISK_LOCALIZED:-0}"
 
 SWIFT_FLAGS=()
 if [ "$APP_STORE" = "1" ]; then
   SWIFT_FLAGS=(-Xswiftc -DAPP_STORE)
+fi
+if [ "$WHISK_LOCALIZED" = "1" ]; then
+  if [ "$APP_STORE" = "1" ]; then
+    echo "APP_STORE and WHISK_LOCALIZED cannot be enabled together" >&2
+    exit 2
+  fi
+  SWIFT_FLAGS+=( -Xswiftc -DWHISK_LOCALIZED )
 fi
 
 # --disable-sandbox turns off SwiftPM's own sandbox, which cannot start
@@ -54,9 +63,9 @@ fi
 # The toolchain stamps App Store uploads expect; absent without Xcode,
 # which only the packaged builds need.
 DT_KEYS=""
-if XCODE_VERSION="$(xcodebuild -version 2>/dev/null)"; then
-  SDK_VERSION="$(xcrun --sdk macosx --show-sdk-version)"
-  SDK_BUILD="$(xcrun --sdk macosx --show-sdk-build-version)"
+if XCODE_VERSION="$(xcodebuild -version 2>/dev/null)" \
+  && SDK_VERSION="$(xcrun --sdk macosx --show-sdk-version 2>/dev/null)" \
+  && SDK_BUILD="$(xcrun --sdk macosx --show-sdk-build-version 2>/dev/null)"; then
   XCODE_NUMBER="$(echo "$XCODE_VERSION" | awk 'NR==1 {split($2, v, "."); printf "%d%d%d", v[1], v[2], v[3] + 0}')"
   XCODE_BUILD="$(echo "$XCODE_VERSION" | awk 'NR==2 {print $3}')"
   DT_KEYS="$(cat <<PLIST

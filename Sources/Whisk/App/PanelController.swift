@@ -63,6 +63,7 @@ final class PanelController {
         panel.onClose = { [weak self] in
             self?.stateStore.endEditing()
             self?.hidePreview()
+            ItemCardView.clearPreviewCache()
             self?.fadeOutVeil()
             self?.stateStore.panelDidClose()
         }
@@ -190,6 +191,7 @@ final class PanelController {
 
     func hide() {
         panel.orderOut(nil)
+        ItemCardView.clearPreviewCache()
     }
 
     private func fadeOutVeil() {

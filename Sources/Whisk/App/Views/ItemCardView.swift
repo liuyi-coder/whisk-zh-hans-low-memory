@@ -296,17 +296,19 @@ struct ItemCardView: View, Equatable {
     // scroll window arrives already decoded.
     private static let imageCache: NSCache<NSUUID, NSImage> = {
         let cache = NSCache<NSUUID, NSImage>()
-        // A few screens' worth of thumbnails; the rest decode again on demand.
-        cache.countLimit = 512
+        cache.totalCostLimit = imageCacheCostLimit
         return cache
     }()
+    private static let imageCacheCostLimit = 32 * 1024 * 1024
     private static let thumbnailMaxDimension = 480
     private static let prewarmQueue = DispatchQueue(label: "whisk.card-prewarm", qos: .utility)
 
     /// Decodes the thumbnails of every image card in the background, ahead
     /// of the card being mounted.
     static func prewarm(_ cards: [CardViewState]) {
-        for card in cards {
+        // The panel mounts only a viewport plus a small scroll buffer. Decode
+        // just that range, so a large history never queues every stored image.
+        for card in cards.prefix(24) {
             guard case .image(let data) = card.preview else { continue }
             let key = card.id as NSUUID
             guard imageCache.object(forKey: key) == nil else { continue }
@@ -314,7 +316,7 @@ struct ItemCardView: View, Equatable {
                 guard imageCache.object(forKey: key) == nil,
                     let thumbnail = thumbnail(from: data)
                 else { return }
-                imageCache.setObject(thumbnail, forKey: key)
+                imageCache.setObject(thumbnail, forKey: key, cost: imageCost(of: thumbnail))
             }
         }
     }
@@ -325,8 +327,17 @@ struct ItemCardView: View, Equatable {
             return cached
         }
         guard let thumbnail = thumbnail(from: data) else { return nil }
-        imageCache.setObject(thumbnail, forKey: key)
+        imageCache.setObject(thumbnail, forKey: key, cost: imageCost(of: thumbnail))
         return thumbnail
+    }
+
+    static func clearPreviewCache() {
+        imageCache.removeAllObjects()
+    }
+
+    private static func imageCost(of image: NSImage) -> Int {
+        guard let representation = image.representations.first else { return 0 }
+        return representation.pixelsWide * representation.pixelsHigh * 4
     }
 
     private static func thumbnail(from data: Data) -> NSImage? {

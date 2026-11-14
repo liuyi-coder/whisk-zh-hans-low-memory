@@ -12,6 +12,9 @@ import Testing
 
         #expect(first.icon != nil)
         #expect(first.icon === second.icon)
+        let bitmap = first.icon?.representations.first as? NSBitmapImageRep
+        #expect(bitmap?.pixelsWide == 32)
+        #expect(bitmap?.pixelsHigh == 32)
         #expect(first.surfaceTint(dark: true) != first.surfaceTint(dark: false))
     }
 

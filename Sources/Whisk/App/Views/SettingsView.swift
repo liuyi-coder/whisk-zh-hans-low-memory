@@ -9,6 +9,8 @@ struct SettingsView: View {
     @ObservedObject var loginItem: LoginItemManager
     @ObservedObject var vimBindings: VimBindingsStore
     var distribution: Distribution = .current
+    var copySoundFeedback: CopySoundFeedback? = nil
+    @State private var asksToQuitForLanguageChange = false
 
     var body: some View {
         // The window is created once and never resized by hand; the
@@ -16,6 +18,7 @@ struct SettingsView: View {
         // freely and a short screen can trim the height.
         Form {
             generalSection
+            copySoundSection
             privacySection
             historySection
             excludedSection
@@ -27,7 +30,16 @@ struct SettingsView: View {
         .frame(width: SettingsWindowSize.width)
         .frame(
             minHeight: SettingsWindowSize.minimumHeight, idealHeight: SettingsWindowSize.height,
-            maxHeight: SettingsWindowSize.height)
+            maxHeight: SettingsWindowSize.height
+        )
+        .alert(
+            localized("Restart Whisk to apply language"), isPresented: $asksToQuitForLanguageChange
+        ) {
+            Button(localized("Quit Whisk"), role: .destructive) { NSApp.terminate(nil) }
+            Button(localized("Later"), role: .cancel) {}
+        } message: {
+            Text(localized("Quit and reopen Whisk to apply the selected language."))
+        }
     }
 
     private var generalSection: some View {
@@ -55,6 +67,55 @@ struct SettingsView: View {
             } label: {
                 SettingsRowLabel(localized("Card size"), symbol: "rectangle.3.group", tint: .indigo)
             }
+            Picker(selection: $general.language) {
+                ForEach(AppLanguage.allCases) { language in
+                    Text(language.label).tag(language)
+                }
+            } label: {
+                SettingsRowLabel(localized("Language"), symbol: "character.bubble", tint: .purple)
+            }
+            .onChange(of: general.language) { _, _ in
+                asksToQuitForLanguageChange = true
+            }
+        }
+    }
+
+    private var copySoundSection: some View {
+        Section {
+            Toggle(isOn: $general.copySound.isEnabled) {
+                SettingsRowLabel(
+                    localized("Play copy sound"), symbol: "speaker.wave.2", tint: .pink)
+            }
+            .toggleStyle(.switch)
+
+            Picker(selection: $general.copySound.option) {
+                ForEach(CopySoundOption.allCases) { option in
+                    Text(option.label).tag(option)
+                }
+            } label: {
+                HStack {
+                    SettingsRowLabel(localized("Copy sound"), symbol: "music.note", tint: .orange)
+                    Spacer()
+                    Button {
+                        copySoundFeedback?.play(general.copySound.option)
+                    } label: {
+                        Image(systemName: "play.circle")
+                            .font(.system(size: 16))
+                    }
+                    .buttonStyle(.plain)
+                    .disabled(!general.copySound.isEnabled)
+                    .padding(.leading, 8)
+                }
+            }
+            .pickerStyle(.menu)
+            .disabled(!general.copySound.isEnabled)
+            .onChange(of: general.copySound.option) { _, option in
+                copySoundFeedback?.play(option)
+            }
+        } header: {
+            Text(localized("Copy feedback"))
+        } footer: {
+            Text(localized("Whisk plays the selected sound after it records a new copy."))
         }
     }
 

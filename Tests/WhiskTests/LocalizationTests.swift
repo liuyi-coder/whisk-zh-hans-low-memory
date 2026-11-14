@@ -4,10 +4,10 @@ import Testing
 @testable import Whisk
 
 /// The catalogs and the code that reads them, checked against each other:
-/// every key the code asks for exists in both languages, and no key
+/// every key the code asks for exists in all languages, and no key
 /// lingers unused.
 @Suite struct LocalizationCatalogs {
-    private static let languages = ["en", "fr"]
+    private static let languages = ["en", "fr", "zh-Hans"]
 
     private func catalog(_ language: String) throws -> [String: Any] {
         var merged: [String: Any] = [:]
@@ -50,15 +50,17 @@ import Testing
     @Test func english_and_french_carry_the_same_keys() throws {
         let english = Set(try catalog("en").keys)
         let french = Set(try catalog("fr").keys)
+        let chinese = Set(try catalog("zh-Hans").keys)
 
         #expect(english.subtracting(french).isEmpty)
         #expect(french.subtracting(english).isEmpty)
+        #expect(english.subtracting(chinese).isEmpty)
+        #expect(chinese.subtracting(english).isEmpty)
     }
 
     @Test func every_key_the_code_asks_for_exists() throws {
-        let english = Set(try catalog("en").keys)
-
-        let missing = try keysUsedInSources().filter { $0.isDisjoint(with: english) }
+        let catalogs = try Self.languages.map { Set(try catalog($0).keys) }
+        let missing = try keysUsedInSources().filter { key in catalogs.contains { key.isDisjoint(with: $0) } }
 
         #expect(missing.isEmpty, "keys without a catalog entry: \(missing)")
     }
@@ -72,17 +74,44 @@ import Testing
         #expect(unused.isEmpty, "catalog keys no code asks for: \(unused.sorted())")
     }
 
-    @Test func strings_resolve_through_the_module_catalogs() throws {
+    @Test func strings_resolve_from_the_selected_catalog() throws {
         let english = try #require(try catalog("en")["Forever"] as? String)
         let french = try #require(try catalog("fr")["Forever"] as? String)
+        let chinese = try #require(try catalog("zh-Hans")["Forever"] as? String)
 
-        #expect([english, french].contains(localized("Forever")))
+        #expect(localized("Forever", language: .english) == english)
+        #expect(localized("Forever", language: .french) == french)
+        #expect(localized("Forever", language: .simplifiedChinese) == chinese)
+    }
+
+    @Test func copy_sound_settings_have_the_same_labels_in_every_language() throws {
+        let englishKeys: Set<String> = [
+            "Copy feedback", "Copy sound", "Play copy sound",
+            "Short tick", "Crisp click", "Soft pop", "Quick snap", "Light chime",
+            "Woodblock tick", "Dry click", "Round pop", "Short tsk", "Low du",
+            "Digital beep", "Bell ding", "Deep dong", "Rising chirp",
+            "Xiaomi water drop", "Xiaomi bird and cicada", "Xiaomi wind chime",
+        ]
+        for language in Self.languages {
+            let catalog = try catalog(language)
+            for key in englishKeys {
+                #expect(catalog[key] as? String != nil)
+            }
+        }
+    }
+
+    @Test func following_a_chinese_system_language_uses_the_whisk_chinese_time_labels() {
+        let systemUsesChinese = Bundle.module.preferredLocalizations.first == "zh-Hans"
+
+        #expect(AppLanguage.system.usesSimplifiedChinese == systemUsesChinese)
     }
 
     @Test func plural_forms_follow_the_count() {
-        #expect(["1 item", "1 élément"].contains(localized("\(1) items")))
-        #expect(["2 items", "2 éléments"].contains(localized("\(2) items")))
-        #expect(["1 character", "1 caractère"].contains(localized("\(1) characters")))
-        #expect(["40 characters", "40 caractères"].contains(localized("\(40) characters")))
+        #expect(localized("\(1) items", language: .simplifiedChinese) == "1 项")
+        #expect(localized("\(2) items", language: .simplifiedChinese) == "2 项")
+        #expect(["1 item", "1 élément"].contains(localized("\(1) items", language: .english)))
+        #expect(["2 items", "2 éléments"].contains(localized("\(2) items", language: .french)))
+        #expect(["1 character", "1 caractère"].contains(localized("\(1) characters", language: .english)))
+        #expect(["40 characters", "40 caractères"].contains(localized("\(40) characters", language: .french)))
     }
 }

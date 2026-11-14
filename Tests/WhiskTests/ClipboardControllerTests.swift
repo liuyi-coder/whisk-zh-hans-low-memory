@@ -21,7 +21,105 @@ import Testing
 
         #expect(spy.last.cards.first?.preview == .text("fresh"))
         #expect(spy.last.cards.first?.sourceLabel == "Safari")
-        #expect(spy.last.countLabel == "1 item")
+        #expect(spy.last.countLabel == localized("\(1) items"))
+    }
+
+    @Test func a_successful_capture_plays_the_selected_copy_sound() {
+        let pasteboard = ScriptedPasteboard()
+        let spy = StateSpy()
+        let feedback = RecordingCopySoundFeedback()
+        let controller = ClipboardController(
+            pasteboard: pasteboard, store: InMemoryHistoryStore(), clock: FakeClock(),
+            copySound: feedback.play, logger: RecordingLogger(), present: spy.record
+        )
+        controller.applyCopySound(CopySoundSettings(isEnabled: true, option: .click))
+        pasteboard.pendingSnapshots = [PasteboardSnapshot(payload: .text("fresh"), source: nil)]
+
+        controller.pollTick()
+
+        #expect(feedback.played == [.click])
+        #expect(spy.last.cards.first?.preview == .text("fresh"))
+    }
+
+    @Test func turning_copy_sound_off_does_not_play_it() {
+        let pasteboard = ScriptedPasteboard()
+        let feedback = RecordingCopySoundFeedback()
+        let controller = ClipboardController(
+            pasteboard: pasteboard, store: InMemoryHistoryStore(), clock: FakeClock(),
+            copySound: feedback.play, logger: RecordingLogger(), present: { _ in }
+        )
+        controller.applyCopySound(CopySoundSettings(isEnabled: false, option: .tick))
+        pasteboard.pendingSnapshots = [PasteboardSnapshot(payload: .text("fresh"), source: nil)]
+
+        controller.pollTick()
+
+        #expect(feedback.played.isEmpty)
+    }
+
+    @Test func a_paused_capture_does_not_play_the_copy_sound() {
+        let pasteboard = ScriptedPasteboard()
+        let feedback = RecordingCopySoundFeedback()
+        let controller = ClipboardController(
+            pasteboard: pasteboard, store: InMemoryHistoryStore(), clock: FakeClock(),
+            copySound: feedback.play, logger: RecordingLogger(), present: { _ in }
+        )
+        controller.setPaused(true)
+        pasteboard.pendingSnapshots = [PasteboardSnapshot(payload: .text("secret"), source: nil)]
+
+        controller.pollTick()
+
+        #expect(feedback.played.isEmpty)
+    }
+
+    @Test func an_excluded_app_does_not_play_the_copy_sound() {
+        let pasteboard = ScriptedPasteboard()
+        let feedback = RecordingCopySoundFeedback()
+        let controller = ClipboardController(
+            pasteboard: pasteboard, store: InMemoryHistoryStore(), clock: FakeClock(),
+            copySound: feedback.play, logger: RecordingLogger(), present: { _ in }
+        )
+        controller.applyExclusions(["com.apple.keychainaccess"])
+        pasteboard.pendingSnapshots = [
+            PasteboardSnapshot(
+                payload: .text("secret"),
+                source: SourceApp(name: "Keychain Access", bundleID: "com.apple.keychainaccess")
+            )
+        ]
+
+        controller.pollTick()
+
+        #expect(feedback.played.isEmpty)
+    }
+
+    @Test func whisks_own_write_does_not_play_the_copy_sound() {
+        let store = InMemoryHistoryStore()
+        store.stored = [anItem(.text("first"))]
+        let pasteboard = ScriptedPasteboard()
+        let feedback = RecordingCopySoundFeedback()
+        let controller = ClipboardController(
+            pasteboard: pasteboard, store: store, clock: FakeClock(),
+            copySound: feedback.play, logger: RecordingLogger(), present: { _ in }
+        )
+        pasteboard.pendingSnapshots = [PasteboardSnapshot(payload: .text("first"), source: nil)]
+
+        controller.pollTick()
+
+        #expect(pasteboard.pendingSnapshots.isEmpty)
+        #expect(feedback.played.isEmpty)
+    }
+
+    @Test func a_storage_failure_does_not_play_the_copy_sound() {
+        let pasteboard = ScriptedPasteboard()
+        let feedback = RecordingCopySoundFeedback()
+        let controller = ClipboardController(
+            pasteboard: pasteboard, store: SaveFailingHistoryStore(), clock: FakeClock(),
+            copySound: feedback.play, logger: RecordingLogger(), present: { _ in }
+        )
+        pasteboard.pendingSnapshots = [PasteboardSnapshot(payload: .text("doomed"), source: nil)]
+
+        controller.pollTick()
+
+        #expect(feedback.played.isEmpty)
     }
 
     @Test func a_poll_tick_presents_the_access_prompt_while_the_system_would_ask_at_every_read() {
@@ -37,7 +135,7 @@ import Testing
 
         #expect(spy.last.cards.isEmpty)
         #expect(spy.last.emptyMessage == nil)
-        #expect(spy.last.accessPrompt?.buttonTitle == "Allow Clipboard Access")
+        #expect(spy.last.accessPrompt?.buttonTitle == localized("Allow Clipboard Access"))
     }
 
     @Test func access_granted_in_system_settings_clears_the_prompt_on_the_next_tick() {
@@ -48,13 +146,13 @@ import Testing
             pasteboard: pasteboard, store: InMemoryHistoryStore(), clock: FakeClock(), present: spy.record
         )
         controller.pollTick()
-        #expect(spy.last.accessPrompt?.buttonTitle == "Open Pasteboard Settings")
+        #expect(spy.last.accessPrompt?.buttonTitle == localized("Open Pasteboard Settings"))
 
         pasteboard.access = .granted
         controller.pollTick()
 
         #expect(spy.last.accessPrompt == nil)
-        #expect(spy.last.emptyMessage == "Copy something to get started")
+        #expect(spy.last.emptyMessage == localized("Copy something to get started"))
     }
 
     @Test func requesting_access_asks_the_pasteboard_once_and_re_presents() {
@@ -315,7 +413,7 @@ import Testing
         )
 
         #expect(spy.last.cards.count == 70)
-        #expect(spy.last.countLabel == "70 items")
+        #expect(spy.last.countLabel == localized("\(70) items"))
 
         // Free words AND together: "item" and "7" both have to match.
         controller.search("item 7")

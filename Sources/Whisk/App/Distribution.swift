@@ -5,18 +5,21 @@
 enum Distribution: Equatable {
     case developerID
     case appStore
+    case localized
 
     /// Whether the app may look for a newer version and point to it.
     var checksForUpdates: Bool {
         switch self {
         case .developerID: true
-        case .appStore: false
+        case .appStore, .localized: false
         }
     }
 
     static var current: Distribution {
         #if APP_STORE
             .appStore
+        #elseif WHISK_LOCALIZED
+            .localized
         #else
             .developerID
         #endif

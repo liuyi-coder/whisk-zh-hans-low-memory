@@ -6,7 +6,7 @@ is everything you need to get a green PR on the first try.
 ## Setup
 
 ```sh
-git clone https://github.com/nathan-poncet/whisk.git
+git clone https://github.com/liuyi-coder/whisk-zh-hans-low-memory.git
 cd whisk
 swift run Whisk
 ```

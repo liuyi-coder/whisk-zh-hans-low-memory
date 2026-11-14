@@ -108,6 +108,32 @@ final class ScriptedPasteboard: Pasteboard {
     }
 }
 
+final class RecordingCopySoundFeedback: @unchecked Sendable {
+    private let lock = NSLock()
+    private var options: [CopySoundOption] = []
+
+    func play(_ option: CopySoundOption) {
+        lock.lock()
+        options.append(option)
+        lock.unlock()
+    }
+
+    var played: [CopySoundOption] {
+        lock.lock()
+        defer { lock.unlock() }
+        return options
+    }
+}
+
+@MainActor
+final class RecordingSettingsPreview: @unchecked Sendable {
+    private(set) var played: [CopySoundOption] = []
+
+    func play(_ option: CopySoundOption) {
+        played.append(option)
+    }
+}
+
 func anItem(
     _ payload: Payload,
     from source: String? = "Tests",

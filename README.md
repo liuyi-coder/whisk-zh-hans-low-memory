@@ -1,247 +1,61 @@
-# Whisk
+# whisk-zh-hans-低内存（英文）
 
-An open-source clipboard manager for macOS, inspired by
-[Paste](https://pasteapp.io/). A menu bar app that remembers everything you
-copy — text, links, images, files, colors — and brings it back through a
-Paste-style panel at the bottom of your screen.
+> ⚠️ 警告：这是非官方修改版，demo 未签名、未公证，仅测试用途，可能被 macOS 拦截；不要与官方 Whisk 同时安装；低内存优化未完成，不保证解决高内存占用。
+> ⚠️ Warning: Unofficial modification. The demo is unsigned and not notarized, for testing only, and may be blocked by macOS. Do not install it alongside the official Whisk. The low-memory work is incomplete and does not guarantee lower memory usage.
+> 🤖 本仓库内容由 AI 生成。 / This repository is AI-generated.
 
-**Website: [nathan-poncet.github.io/whisk](https://nathan-poncet.github.io/whisk/)**
+## 中文说明
 
-[![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/S3V726AT7H)
+- 基于上游 [`nathan-poncet/whisk`](https://github.com/nathan-poncet/whisk) `v1.0.3`，采用 GPL-3.0-or-later 许可。
+- 非官方简体中文、英文、法文界面修改版，默认简体中文，可在设置中切换。
+- 复制成功提示音（灵感来自 Paste）：成功记录新剪贴板内容后播放提示音，默认开启，可关闭，支持 18 种音效和试听。
+- 低内存修改：来源应用图标缩至 32×32 后取色；缩略图缓存上限 32 MiB；只预热前 24 张卡片；关闭历史面板时清空缓存。
+- 已知限制：SQLite 历史图片仍会全量读入内存；完整 XCTest 和实际 RSS 对比尚未完成。
+- demo 下载见 [Releases](https://github.com/liuyi-coder/whisk-zh-hans-low-memory/releases)；仅作测试，不作为正式版本。
 
-https://github.com/user-attachments/assets/25bc53ce-697b-4259-a951-a1324fcc205d
+## English
 
-*Whisk in 30 seconds — clipboard history, search, paste stack, preview, and drag & drop. 1080p with sound.*
+- Based on upstream [`nathan-poncet/whisk`](https://github.com/nathan-poncet/whisk) `v1.0.3`, licensed under GPL-3.0-or-later.
+- Unofficial Simplified Chinese, English and French UI modification; defaults to Simplified Chinese and can be changed in Settings.
+- Copy success sound (inspired by Paste): plays after Whisk successfully records a new clipboard item; on by default, configurable, with 18 sounds and preview.
+- Low-memory changes: source app icons are sampled at 32×32; thumbnail cache is capped at 32 MiB; only the first 24 cards are prewarmed; cache is cleared when the history panel closes.
+- Known limits: SQLite history images are still loaded fully into memory; full XCTest and real RSS comparisons are not complete.
+- See [Releases](https://github.com/liuyi-coder/whisk-zh-hans-low-memory/releases) for the demo; it is for testing only and is not an official release.
 
-Built in Swift/SwiftUI following Clean Architecture: a pure, synchronous
-kernel behind ports, adapters at the edges, and a composition root that wires
-them together. See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)
-([français](docs/fr/ARCHITECTURE.md)).
+## 功能
 
-## Features
+- 剪贴板历史、搜索、过滤、置顶、撤销、粘贴队列、拖放、预览。
+- 简体中文、英文、法文界面，默认简体中文。
+- 复制成功提示音（灵感来自 Paste），默认开启，可关闭，18 种音效，支持试听。
+- 低内存修改：图标取色缩小到 32×32、缩略图缓存 32 MiB、前 24 张预热、关闭面板清空缓存。
 
-- **Clipboard history** — every copy is captured and persisted locally,
-  newest first, deduplicated.
-- **Liquid Glass panel** — `⇧⌘V` opens a floating glass panel on the
-  screen where your pointer is (the macOS 26 look, translucent materials
-  on earlier systems); click a card to copy it
-  back (and paste it directly when Accessibility access is granted). The
-  shortcut follows your keyboard layout — `V` is wherever your layout
-  prints it (Dvorak, AZERTY, Colemak, …), re-resolved live when you switch
-  layouts.
-- **Per-app styling** — each card carries the icon of the application it
-  was copied from and takes its tint from that app's icon. Cards come in
-  three sizes (Settings).
-- **Search** — type to filter instantly by content **or by the app it came
-  from** (`slack invoice` finds "invoice" copied from Slack); operators
-  `app:safari`, `type:link` and `pinned` combine with free text; the
-  matched letters light up on the cards; `Return` selects the first match.
-- **Filters** — a chip bar narrows the rail by source application (one chip
-  per app, with its icon) and by content category (text, code, color, link,
-  image, files); chips combine with each other and with the search query.
-- **Pins** — pin a card (`⌘P` or right-click) and filter to pinned items
-  with one chip; pinned items survive *Clear*, eviction and retention.
-- **Undo** — `⌘Z` brings back what the last deletion, clear or edit took,
-  twenty steps deep within a session.
-- **Paste stack** — queue several cards with `⇧⏎` (press again to
-  unqueue; stacked cards wear a numbered badge showing their rank), then
-  pop them one by one anywhere with `⌥⌘V` (global, rebindable): collect
-  once, paste in order.
-- **Rich text** — formatting (RTF) is captured and pasted back; `⌥⏎`
-  pastes as plain text instead.
-- **Paste as…** — right-click a text or link card to paste it rewritten:
-  upper or lower case, trimmed, on one line, without accents, URL- or
-  base64-encoded or decoded, formatted JSON. The card itself stays as
-  copied.
-- **Quick Look-style preview** — `⌘Y` opens a large preview of the
-  selected card (full text, full-size image, file list).
-- **Drag & drop** — drag any card straight into another application.
-- **Retention** — keep history forever, or auto-expire after 24 hours,
-  7 days or 30 days; capacity is configurable up to unlimited (Settings).
-- **Pause & exclusions** — pause capture from the menu bar; exclude any
-  app permanently in Settings (its copies are never recorded).
-- **Launch at login** — one toggle in Settings; a short welcome window
-  on first run shows the shortcut, and Whisk can check GitHub for new
-  releases at launch (opt-out in Settings).
-- **Rich previews** — copied links show the page's title, favicon and lead
-  image; files show a QuickLook thumbnail; images render inline; hex codes
-  become color swatches.
-- **Syntax highlighting** — text that reads as code is detected and
-  highlighted (keywords, strings, comments, numbers), language-agnostic.
-- **Clipboard access under pasteboard privacy** — where macOS asks before
-  an app reads the clipboard on its own (Privacy & Security → Paste from
-  Other Apps, which recent macOS versions enforce), Whisk asks once, from
-  the welcome window or the panel, and you allow it for good there. Until
-  then nothing is recorded, and the panel says so.
-- **Privacy** — history stays on disk in
-  `~/Library/Application Support/Whisk` (SQLite); password managers marking
-  their content as concealed (`org.nspasteboard.ConcealedType`) are never
-  recorded. Two exceptions to "nothing leaves your machine", each with its
-  switch in Settings: link previews fetch metadata from the copied URL
-  (cached, once per link), and the update check queries the GitHub
-  releases API at launch.
-- **English & French** — the interface follows your system language.
+## 源码结构
 
-## Requirements
+- `Sources/Whisk/Entities/`：`History`、`ClipboardItem`、`Payload`、`SourceApp` 等实体。
+- `Sources/Whisk/UseCases/`：复制捕获、搜索过滤、删除、撤销、保留策略等纯逻辑。
+- `Sources/Whisk/Adapters/`：`ClipboardController`、`HistoryPresenter`、`SQLiteHistoryStore`、`AppKitPasteboard` 等适配器。
+- `Sources/Whisk/App/`：SwiftUI 视图、面板、菜单栏、热键和组合根。
+- 本地化资源：`Sources/Whisk/Resources/zh-Hans.lproj/`、`en.lproj/`、`fr.lproj/`。
+- 提示音资源：`Sources/Whisk/Resources/CopySounds/`。
+- 低内存相关：`Sources/Whisk/App/Views/SourceAppStyle.swift`、`Sources/Whisk/App/Views/ItemCardView.swift`、`Sources/Whisk/App/PanelController.swift`。
 
-- macOS 14 or later to run (Liquid Glass on macOS 26, material fallback
-  before that)
-- The macOS 26 SDK to build (Xcode 26+, or matching Command Line Tools —
-  running the test suite requires Xcode)
-
-## Install
-
-**Homebrew** (recommended — installs the prebuilt app into /Applications):
+## 构建
 
 ```sh
-brew install --cask nathan-poncet/tap/whisk
+git clone https://github.com/liuyi-coder/whisk-zh-hans-low-memory.git
+cd whisk-zh-hans-low-memory
+WHISK_LOCALIZED=1 ./scripts/build-app.sh 1.0.3 native
 ```
 
-**Direct download** — grab the latest DMG and drag Whisk into
-Applications:
+`WHISK_LOCALIZED=1` 会构建本地化版本并关闭上游更新检查。生成的应用位于 `dist/Whisk.app`。
 
-> [**Download Whisk.dmg (latest)**](https://github.com/nathan-poncet/whisk/releases/latest/download/Whisk.dmg)
+## Demo
 
-## Run it from source
+Releases 中的 `Whisk-1.0.3-zh-hans-low-memory-demo.zip` 是未签名、未公证的 Ad Hoc 测试包，可能被 macOS 拦截。仅用于测试，不要作为正式版本分发。
 
-```sh
-git clone https://github.com/nathan-poncet/whisk.git
-cd whisk
-swift run Whisk
-```
+## 许可证
 
-To build a proper app bundle (icon, Info.plist, menu-bar-only):
-
-```sh
-./scripts/build-app.sh 0.0.0 native   # → dist/Whisk.app
-```
-
-To try a build beside the Whisk you already run, give it a data
-directory of its own — two instances sharing `history.sqlite` would
-overwrite each other's history — and quit the installed one first, since
-only one of them can hold the global shortcut:
-
-```sh
-open -n dist/Whisk.app --env WHISK_DATA_DIR=/tmp/whisk-test
-```
-
-The clipboard icon appears in the menu bar. Copy a few things, then press
-`⇧⌘V`.
-
-- **Left-click** the menu bar icon (or `⇧⌘V`): toggle the panel.
-- **Right-click** the icon: menu (show, clear, quit).
-- **Arrow keys**: `←`/`→` move within the focused zone — the chip row is
-  one line (apps | categories) and arrows cross the separator; `↑`/`↓`
-  jump between the chip row and the card rail; `⌃⇥` jumps straight to the
-  other chip group. `Return` toggles the focused chip (the panel stays
-  open) or pastes the selected card.
-- **Return**: paste the selected card into the text field that had focus
-  before the panel opened. The panel never steals focus, so the caret is
-  exactly where you left it; the first use prompts for Accessibility
-  access (System Settings → Privacy & Security → Accessibility), and until
-  it is granted the card still lands on the clipboard for a manual `⌘V`.
-- **⌥⏎**: paste as plain text (formatting stripped).
-- **⇧⏎**: toggle the selected card in and out of the paste stack — queued
-  cards show a numbered badge; **⌥⌘V** (global) pops the next stacked card
-  wherever you are typing.
-- **⌘Y**: large preview of the selected card (Finder's Quick Look
-  shortcut); `⌘Y` again or `Esc` closes it.
-- **Click a card**: same as Return, for that card.
-- **⌘1…⌘9**: paste the card at that position directly — the digit you
-  actually type, so shifted-digit layouts (Programmer Dvorak, AZERTY) use
-  `⌘⇧digit`.
-- **⌘P / ⌘⌫**: pin or delete the selected card.
-- **⌘C**: copy the selected card without pasting; **⌘O** opens a link,
-  **⌘R** reveals files in Finder, **⌘S** saves the card as a file;
-  **⌃⌘X** excludes the card's application, **⌃⌘⌫** deletes everything
-  copied from it (pins survive).
-- **`⌘E`**: edit the selected card's text in place; `Return` saves, `⇧⏎`
-  breaks the line, `Esc` cancels. A rewrite that reads as a web address
-  becomes a link again.
-- **`⌘Z`**: undo the last deletion, clear or edit, up to twenty steps
-  back in the session (also in the menu bar menu).
-- **Right-click a card**: everything above, plus paste as plain text and
-  "Paste as…" rewrites, in one menu.
-- **Esc** or click outside: close the panel.
-
-Every shortcut — including the global one — is rebindable: right-click the
-menu bar icon → **Settings…**, then click a shortcut and type a new one.
-
-You can also open `Package.swift` in Xcode and run the `Whisk` scheme.
-
-## Tests
-
-```sh
-swift test
-```
-
-The suites cover history behaviour (dedup, capacity, pins, search),
-controller orchestration, and presenter formatting with deterministic
-fakes — frozen clock, scripted pasteboard, in-memory store, recording
-logger. One parameterized contract suite runs the `HistoryStore` port
-against every gateway (SQLite, in-memory) in temporary directories; the
-storage bootstrap, the legacy JSON import, the pasteboard gateway and the
-string catalogs have suites of their own. Views render off screen in
-every state, key routing runs on synthetic key presses, and no test ever
-shows a window; only the composition root, the global hot key and the
-paste simulation stay outside the suite. `./scripts/coverage.sh` runs
-the tests with coverage and prints the report. The Dependency Rule is
-linted by `./scripts/check-dependency-rule.sh`. CI runs everything on
-every push and archives the coverage report.
-
-## CI & releases
-
-Every push runs the Dependency Rule lint, `swift format lint --strict`,
-the build, and the tests with coverage ([ci.yml](.github/workflows/ci.yml));
-the build fails when line coverage of the testable code drops under 90 %
-(everything but the composition root, the global hot key, the paste
-simulation and the entry point, which no unit test may exercise). Dependabot
-keeps the GitHub Actions (and any future Swift package dependencies) up to
-date and raises security alerts with automated fixes; CodeQL scans the
-Swift code itself on every push and weekly.
-
-Pushing a tag `v*` runs [release.yml](.github/workflows/release.yml): it
-tests, builds a universal (arm64 + x86_64) `Whisk.app`, attaches the zip to
-a GitHub release whose notes are the version's section of
-[CHANGELOG.md](CHANGELOG.md), and bumps the Homebrew formula in
-[nathan-poncet/homebrew-tap](https://github.com/nathan-poncet/homebrew-tap)
-(requires a `TAP_GITHUB_TOKEN` repository secret with write access to the
-tap).
-
-```sh
-git tag v0.2.0 && git push origin v0.2.0
-```
-
-## Status & roadmap
-
-Whisk covers the daily-driver feature set: history with pins and retention,
-search with operators, filters, keyboard-first navigation with rebindable
-shortcuts, rich previews, paste stack, plain-text paste, drag & drop,
-pause & per-app exclusions, SQLite storage, and an English/French
-interface. Still on the list:
-
-- iCloud sync and an iOS/iPadOS companion app
-- Shared pinboards
-
-Contributions welcome — start with [CONTRIBUTING.md](CONTRIBUTING.md) and
-[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for the rules the codebase
-follows.
-
-## Credits
-
-The Neovim mark (used as the code-category icon) is by Jason Long,
-licensed [CC BY 3.0](https://creativecommons.org/licenses/by/3.0/).
-
-## License
-
-[GPL-3.0-or-later](LICENSE) since v0.5.0: you can use, study, modify and
-redistribute Whisk freely, but derivatives must stay open source under the
-same terms and keep the copyright notice — no proprietary forks. For a
-commercial license under other terms, contact the author.
-
-An [additional permission](LICENSE-EXCEPTION-APP-STORE.md) under GPLv3
-section 7 allows distribution through Apple's App Store, whose terms the
-GPL alone would not permit; the source stays under the GPL.
-
-Releases up to and including v0.4.0 were published under MIT and remain so
-(an already-granted MIT license is irrevocable for those versions).
+- 上游 Whisk：GPL-3.0-or-later，版权归属 Nathan Poncet。
+- 本仓库修改、简体中文资源和自制提示音：GPL-3.0-or-later。
+- 小米提示音：来源见 `Sources/Whisk/Resources/CopySounds/Xiaomi/SOURCE.md`，按 GPL-3.0-or-later 授权。
+- 详见 `LICENSE` 与 `LICENSE-EXCEPTION-APP-STORE.md`。

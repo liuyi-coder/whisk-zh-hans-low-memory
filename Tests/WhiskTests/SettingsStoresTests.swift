@@ -229,6 +229,9 @@ final class IsolatedDefaults {
         #expect(!store.vimNavigation)
         #expect(store.linkPreviews)
         #expect(store.cardSize == .medium)
+        #expect(store.copySound.isEnabled)
+        #expect(store.copySound.option == .tick)
+        #expect(store.language == .simplifiedChinese)
         #expect(store.excludedApps.isEmpty)
         #expect(store.policy == .standard)
     }
@@ -255,6 +258,8 @@ final class IsolatedDefaults {
         first.vimNavigation = true
         first.linkPreviews = false
         first.cardSize = .large
+        first.copySound = CopySoundSettings(isEnabled: false, option: .click)
+        first.language = .french
         first.excludedApps = [ExcludedApp(bundleID: "com.apple.keychainaccess", name: "Keychain Access")]
 
         let second = GeneralSettingsStore(defaults: sandbox.defaults)
@@ -262,9 +267,12 @@ final class IsolatedDefaults {
         #expect(second.capacity == 1000)
         #expect(second.retentionPeriod == .month)
         #expect(!second.checkForUpdates)
+        #expect(second.language == .french)
         #expect(second.vimNavigation)
         #expect(!second.linkPreviews)
         #expect(second.cardSize == .large)
+        #expect(!second.copySound.isEnabled)
+        #expect(second.copySound.option == .click)
         #expect(second.excludedBundleIDs == ["com.apple.keychainaccess"])
     }
 
@@ -308,6 +316,6 @@ final class IsolatedDefaults {
 
     @Test func capacity_labels_read_naturally() {
         #expect(GeneralSettingsStore.capacityLabel(0) == localized("Unlimited"))
-        #expect(["500 items", "500 éléments"].contains(GeneralSettingsStore.capacityLabel(500)))
+        #expect(GeneralSettingsStore.capacityLabel(500) == localized("\(500) items"))
     }
 }

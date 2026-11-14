@@ -54,6 +54,7 @@ final class ClipboardController<Board: Pasteboard, Time: Clock, Store: HistorySt
     private var nextExpiry: Date = .distantPast
     private var isPaused = false
     private var excludedBundleIDs: Set<String> = []
+    private var copySoundSettings = CopySoundSettings(isEnabled: true, option: .tick)
     /// The access state the panel last saw; a change re-presents on its own,
     /// since granting access in System Settings mutates nothing else.
     private var presentedAccess: PasteboardAccess = .granted
@@ -90,6 +91,7 @@ final class ClipboardController<Board: Pasteboard, Time: Clock, Store: HistorySt
     private let pasteboard: Board
     private let logger: Log
     private let present: (HistoryViewState) -> Void
+    private let copySound: @Sendable (CopySoundOption) -> Void
 
     /// The retention policy shapes the history from the first load: a
     /// history rebuilt at the default capacity would evict what a roomier
@@ -100,6 +102,7 @@ final class ClipboardController<Board: Pasteboard, Time: Clock, Store: HistorySt
         clock: Time,
         retention: RetentionPolicy = .standard,
         presenter: HistoryPresenter = HistoryPresenter(),
+        copySound: @escaping @Sendable (CopySoundOption) -> Void = { _ in },
         logger: Log,
         present: @escaping (HistoryViewState) -> Void
     ) {
@@ -107,6 +110,7 @@ final class ClipboardController<Board: Pasteboard, Time: Clock, Store: HistorySt
         self.presenter = presenter
         self.pasteboard = pasteboard
         self.logger = logger
+        self.copySound = copySound
         self.present = present
         self.retention = retention
         presentedAccess = pasteboard.access
@@ -138,7 +142,11 @@ final class ClipboardController<Board: Pasteboard, Time: Clock, Store: HistorySt
             // retro-captured on resume.
             _ = pasteboard.readIfChanged()
         } else {
+            let before = history
             mutate { try capture(into: $0, excluding: excludedBundleIDs) }
+            if history.items != before.items, copySoundSettings.isEnabled {
+                copySound(copySoundSettings.option)
+            }
         }
         guard retention.maxAge != nil, clock.now() >= nextExpiry else { return }
         enforceRetentionNow()
@@ -170,6 +178,10 @@ final class ClipboardController<Board: Pasteboard, Time: Clock, Store: HistorySt
     /// Applications whose copies must never be recorded.
     func applyExclusions(_ bundleIDs: Set<String>) {
         excludedBundleIDs = bundleIDs
+    }
+
+    func applyCopySound(_ settings: CopySoundSettings) {
+        copySoundSettings = settings
     }
 
     /// Applies a new retention policy immediately and keeps enforcing it.

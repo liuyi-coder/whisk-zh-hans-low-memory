@@ -2,7 +2,7 @@ name: CI
 
 on:
   push:
-    branches: [main]
+    branches: [zh-hans]
   pull_request:
 
 jobs:
@@ -10,6 +10,8 @@ jobs:
     runs-on: macos-26
     steps:
       - uses: actions/checkout@v7
+      - name: Localization catalogs
+        run: python3 scripts/check-localization-catalogs.py
       - name: Dependency Rule
         run: ./scripts/check-dependency-rule.sh
       - name: Format lint

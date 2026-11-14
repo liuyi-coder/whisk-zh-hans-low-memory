@@ -9,6 +9,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private let logger = ConsoleLogger()
     private let keyBindings = KeyBindingsStore()
     private let generalSettings = GeneralSettingsStore()
+    private let copySoundFeedback = CopySoundFeedback()
     private let vimKeymap = VimBindingsStore()
     private let loginItem = LoginItemManager()
     private let updateChecker = UpdateChecker()
@@ -33,7 +34,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             store: store,
             clock: SystemClock(),
             retention: generalSettings.policy,
-            logger: logger
+            copySound: { [copySoundFeedback] option in
+                copySoundFeedback.play(option)
+            },
+            logger: logger,
         ) { state in
             stateStore.update(state)
         }
@@ -84,6 +88,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             }
         clipboard.applyRetention(generalSettings.policy)
         clipboard.applyExclusions(generalSettings.excludedBundleIDs)
+        clipboard.applyCopySound(generalSettings.copySound)
         LinkPreviewStore.shared.setEnabled(generalSettings.linkPreviews)
         stateStore.configureCards(side: generalSettings.cardSize.side)
         clipboard.setLayoutDirection(
@@ -96,6 +101,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                 guard let self else { return }
                 self.clipboard?.applyRetention(self.generalSettings.policy)
                 self.clipboard?.applyExclusions(self.generalSettings.excludedBundleIDs)
+                self.clipboard?.applyCopySound(self.generalSettings.copySound)
                 LinkPreviewStore.shared.setEnabled(self.generalSettings.linkPreviews)
                 self.stateStore?.configureCards(side: self.generalSettings.cardSize.side)
             }
@@ -296,7 +302,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             let hosting = NSHostingController(
                 rootView: SettingsView(
                     store: keyBindings, general: generalSettings, loginItem: loginItem,
-                    vimBindings: vimKeymap)
+                    vimBindings: vimKeymap, copySoundFeedback: copySoundFeedback)
             )
             let window = NSWindow(contentViewController: hosting)
             // SwiftUI sizing is lazy: without this the window materializes

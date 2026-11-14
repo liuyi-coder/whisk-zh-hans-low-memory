@@ -37,8 +37,9 @@ enum SourceAppStyle {
         guard let url = NSWorkspace.shared.urlForApplication(withBundleIdentifier: bundleID) else {
             return fallback
         }
-        let icon = NSWorkspace.shared.icon(forFile: url.path)
-        return resolved(icon: icon, base: dominantColor(of: icon) ?? .systemGray)
+        let sourceIcon = NSWorkspace.shared.icon(forFile: url.path)
+        let icon = thumbnail(of: sourceIcon)
+        return resolved(icon: icon, base: icon.flatMap(dominantColor) ?? .systemGray)
     }
 
     private static func resolved(icon: NSImage?, base: NSColor) -> Resolved {
@@ -60,10 +61,34 @@ enum SourceAppStyle {
         )
     }
 
-    private static func dominantColor(of image: NSImage) -> NSColor? {
-        guard let tiff = image.tiffRepresentation,
-            let bitmap = NSBitmapImageRep(data: tiff)
+    private static let sampleSide = 32
+
+    private static func thumbnail(of image: NSImage) -> NSImage? {
+        guard
+            let bitmap = NSBitmapImageRep(
+                bitmapDataPlanes: nil,
+                pixelsWide: sampleSide,
+                pixelsHigh: sampleSide,
+                bitsPerSample: 8,
+                samplesPerPixel: 4,
+                hasAlpha: true,
+                isPlanar: false,
+                colorSpaceName: .deviceRGB,
+                bytesPerRow: sampleSide * 4,
+                bitsPerPixel: 32
+            ), let context = NSGraphicsContext(bitmapImageRep: bitmap)
         else { return nil }
+        NSGraphicsContext.saveGraphicsState()
+        NSGraphicsContext.current = context
+        image.draw(in: NSRect(x: 0, y: 0, width: sampleSide, height: sampleSide))
+        NSGraphicsContext.restoreGraphicsState()
+        let thumbnail = NSImage(size: NSSize(width: sampleSide, height: sampleSide))
+        thumbnail.addRepresentation(bitmap)
+        return thumbnail
+    }
+
+    private static func dominantColor(of image: NSImage) -> NSColor? {
+        guard let bitmap = image.representations.first as? NSBitmapImageRep else { return nil }
         let width = bitmap.pixelsWide
         let height = bitmap.pixelsHigh
         guard width > 0, height > 0 else { return nil }
