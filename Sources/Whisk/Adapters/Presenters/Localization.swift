@@ -40,6 +40,7 @@ func localized(_ key: String.LocalizationValue, language: AppLanguage = .stored(
         let stringsURL = Bundle.module.url(
             forResource: "Localizable",
             withExtension: "strings",
+            subdirectory: nil,
             localization: language.rawValue
         ),
         let bundle = Bundle(url: stringsURL.deletingLastPathComponent())
