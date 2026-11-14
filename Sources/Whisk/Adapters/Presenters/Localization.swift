@@ -37,9 +37,12 @@ enum AppLanguage: String, CaseIterable, Identifiable {
 /// so translated text does not depend on a network translation service.
 func localized(_ key: String.LocalizationValue, language: AppLanguage = .stored()) -> String {
     guard language != .system,
-        let url = Bundle.module.url(
-            forResource: language.rawValue, withExtension: "lproj"),
-        let bundle = Bundle(url: url)
+        let stringsURL = Bundle.module.url(
+            forResource: "Localizable",
+            withExtension: "strings",
+            localization: language.rawValue
+        ),
+        let bundle = Bundle(url: stringsURL.deletingLastPathComponent())
     else {
         return String(localized: key, bundle: .module)
     }
