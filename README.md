@@ -10,7 +10,7 @@
 - 非官方简体中文、英文、法文界面修改版，默认简体中文，可在设置中切换。
 - 复制成功提示音（灵感来自 Paste）：成功记录新剪贴板内容后播放提示音，默认开启，可关闭，支持 18 种音效和试听。
 - 低内存修改：来源应用图标缩至 32×32 后取色；缩略图缓存上限 32 MiB；只预热前 24 张卡片；关闭历史面板时清空缓存。
-- 已知限制：SQLite 历史图片仍会全量读入内存；完整 XCTest 和实际 RSS 对比尚未完成。
+- 已知限制：SQLite 历史图片仍会全量读入内存；完整 XCTest 已由 GitHub CI 通过，实际 RSS 对比尚未完成。
 - demo 下载见 [Releases](https://github.com/liuyi-coder/whisk-zh-hans-low-memory/releases)；仅作测试，不作为正式版本。
 
 ## English
@@ -19,7 +19,7 @@
 - Unofficial Simplified Chinese, English and French UI modification; defaults to Simplified Chinese and can be changed in Settings.
 - Copy success sound (inspired by Paste): plays after Whisk successfully records a new clipboard item; on by default, configurable, with 18 sounds and preview.
 - Low-memory changes: source app icons are sampled at 32×32; thumbnail cache is capped at 32 MiB; only the first 24 cards are prewarmed; cache is cleared when the history panel closes.
-- Known limits: SQLite history images are still loaded fully into memory; full XCTest and real RSS comparisons are not complete.
+- Known limits: SQLite history images are still loaded fully into memory; full XCTest has passed in GitHub CI, while real RSS comparisons are not complete.
 - See [Releases](https://github.com/liuyi-coder/whisk-zh-hans-low-memory/releases) for the demo; it is for testing only and is not an official release.
 
 ## 功能

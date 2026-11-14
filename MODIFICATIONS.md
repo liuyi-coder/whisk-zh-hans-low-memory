@@ -34,7 +34,7 @@
 
 ### 已知问题
 
-- 完整 XCTest 尚未在当前机器完成；GitHub CI 会在推送后运行。
+- 完整 XCTest 已由 GitHub CI 通过；实际 RSS 对比尚未完成。
 - 低内存修改尚未做实际 RSS 对比，不能承诺解决约 700 MB 常驻占用。
 - demo 为 Ad Hoc 签名、未公证，macOS 可能拦截。
 - Bundle ID 仍为 `com.nathanponcet.whisk`，不要与官方 Whisk 同时安装。
@@ -76,7 +76,7 @@
 
 ### Known issues
 
-- Full XCTest has not been completed on the current machine; GitHub CI will run after push.
+- Full XCTest has passed in GitHub CI; real RSS comparisons are not complete.
 - No real RSS comparison has been done for the low-memory changes; they do not guarantee fixing the roughly 700 MB resident usage.
 - The demo is Ad Hoc signed and not notarized; macOS may block it.
 - The Bundle ID remains `com.nathanponcet.whisk`; do not install it alongside the official Whisk.
